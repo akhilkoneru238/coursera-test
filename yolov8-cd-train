@@ -1,0 +1,53 @@
+import argparse
+from ultralytics import YOLO
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--model", default="yolov8s.pt")
+    ap.add_argument("--data", default="data.yaml")
+    ap.add_argument("--epochs", type=int, default=70)
+    ap.add_argument("--imgsz", type=int, default=1024)
+    ap.add_argument("--batch", type=int, default=8)
+    ap.add_argument("--device", default="0")
+    ap.add_argument("--name", default="run1")
+    args = ap.parse_args()
+
+    device = args.device
+    if "," in device:
+        device = [int(d) for d in device.split(",")]
+
+    model = YOLO(args.model)
+    model.train(
+        data=args.data,
+        epochs=args.epochs,
+        imgsz=args.imgsz,
+        batch=args.batch,
+        device=device,
+        project="crater_yolov8_runs",
+        name=args.name,
+        hsv_h=0.0,
+        hsv_s=0.0,
+        hsv_v=0.3,
+        flipud=0.5,
+        fliplr=0.5,
+        degrees=90.0,
+        translate=0.1,
+        scale=0.5,
+        mosaic=1.0,
+        close_mosaic=10,
+        patience=15,
+        cos_lr=True,
+        amp=True,
+        seed=42,
+        plots=True,
+    )
+
+    metrics = model.val()
+    print(f"\nmAP@0.5      : {metrics.box.map50:.4f}")
+    print(f"mAP@0.5:0.95 : {metrics.box.map:.4f}")
+    print("Best weights: crater_yolov8_runs/%s/weights/best.pt" % args.name)
+
+
+if __name__ == "__main__":
+    main()
