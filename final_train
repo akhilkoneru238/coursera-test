@@ -1,0 +1,25 @@
+import glob, os
+from ultralytics import YOLO
+
+# 1. locate dataset wherever Kaggle mounted it
+hits = glob.glob("/kaggle/input/**/images/val", recursive=True)
+assert hits, "dataset not attached! Add it via Add Input ->  your fresh_dataset"
+root = os.path.dirname(os.path.dirname(hits[0]))
+print("dataset root:", root)
+
+# 2. write data.yaml with the real path
+with open("/kaggle/working/data.yaml", "w") as f:
+    f.write(f"path: {root}\ntrain: images/train\nval: images/val\nnc: 1\nnames:\n  0: crater\n")
+
+# 3. train
+model = YOLO("yolov8m.pt")
+model.train(
+    data="/kaggle/working/data.yaml",
+    imgsz=1024, epochs=80, batch=-1, workers=2,
+    max_det=1500,
+    scale=0.7, mosaic=1.0, close_mosaic=15,
+    fliplr=0.5, flipud=0.5, degrees=0.0, shear=0.0, perspective=0.0,
+    translate=0.1, hsv_h=0.0, hsv_s=0.0, hsv_v=0.4, mixup=0.0, erasing=0.0,
+    cos_lr=True, patience=30,
+    project="runs/crater", name="yolov8m_1024", plots=True,
+)
